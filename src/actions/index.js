@@ -1,5 +1,18 @@
 import jsonPlaceholder from '../apis/jsonplaceholder';
-import _ from 'lodash';
+
+export const fetchPostsAndUsers = () => async (dispatch, getState) => {
+  await dispatch(fetchPosts());
+  const uniqueIds = getState()
+    .posts.map(post => post.userId)
+    .reduce((unique, id) => {
+      if (!unique.includes(id)) {
+        return [...unique, id];
+      } else {
+        return unique;
+      }
+    }, []);
+  uniqueIds.forEach(id => dispatch(fetchUser(id)));
+};
 
 export const fetchPosts = () => async dispatch => {
   // complete response object is returned from axios
@@ -10,13 +23,10 @@ export const fetchPosts = () => async dispatch => {
   });
 };
 
-export const fetchUser = id => dispatch => _fetchUser(id, dispatch);
-
-// _fetchUser is a memoized version
-const _fetchUser = _.memoize(async (id, dispatch) => {
+export const fetchUser = id => async dispatch => {
   const response = await jsonPlaceholder.get(`/users/${id}`);
   dispatch({
     type: 'FETCH_USER',
     payload: response.data
   });
-});
+};
